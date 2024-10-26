@@ -129,6 +129,26 @@ def send_question(users: list[str], text: str, *, anon: bool = False):
     }
 
 
+@make_req("GET", "/answers/chats", paginated=False, item_id_key="qid")
+def fetch_chats(qid: str, *, limit: Optional[int] = 100):
+    return {"qid": qid, "limit": limit}
+
+
+@make_req(
+    "GET",
+    "/users/answers",
+)
+def fetch_answers_2(username: str, *, skip: Optional[str] = None):
+    return {"uid": username, "skip": skip}
+
+
+@make_req("GET", "/users/profile/stream", paginated=True, unwrap_key="items")
+def fetch_profile_stream(
+    username: str, skip: Optional[str] = None, limit: Optional[int] = 50
+):
+    return {"uid": username, "limit": limit, "skip": skip}
+
+
 # === Report/block ===
 
 

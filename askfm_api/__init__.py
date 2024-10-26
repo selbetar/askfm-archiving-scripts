@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import contextlib
-from dataclasses import dataclass, field
 import hmac
 import itertools
 import json
 import logging
 import secrets
 import time
+from dataclasses import dataclass, field
 from typing import Any, Iterator, Optional, Union
 from urllib.parse import quote
 
@@ -22,7 +22,7 @@ DEFAULT_HEADERS = {
     "Accept-Encoding": "identity",
     "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 6.0.1; GT-N7100 Build/MOB30R)",
     "X-Api-Version": "1.18",
-    "X-Client-Type": "android_4.67.1",
+    "X-Client-Type": "android_4.90.7",
 }
 DEFAULT_HOST = "api.ask.fm:443"
 DEFAULT_LIMIT = 50
@@ -203,7 +203,7 @@ class AskfmApi:
             if not items:  # strangely, API always returns hasMore=True
                 break
             yield from items
-            if not res["incomplete"] and not res["hasMore"]:
+            if not res.get("incomplete", False) and not res["hasMore"]:
                 break
             offset += len(items)
 
