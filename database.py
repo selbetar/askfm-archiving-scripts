@@ -2,7 +2,9 @@ import logging
 import os
 import sqlite3
 from typing import TypedDict
+
 import config
+
 
 class QuestionModel(TypedDict):
     qid: int  # primary
