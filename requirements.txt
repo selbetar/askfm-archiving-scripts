@@ -1,0 +1,4 @@
+requests
+black
+isort
+pylint
