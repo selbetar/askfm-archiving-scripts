@@ -10,3 +10,4 @@ dist/
 *.code-workspace
 output
 *.db
+*.log
