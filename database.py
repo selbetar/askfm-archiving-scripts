@@ -23,6 +23,7 @@ class AnswerModel(TypedDict):
     uid: str
     text: str | None
     visual_id: str | None
+    like_count: int
     created_at: int
 
 
@@ -76,14 +77,14 @@ class QuestionAnswerView(TypedDict):
     q_vid: str  # question_visualid
     question: str
     q_ts: str  # q.created_at
+    like_count: int
 
 
 class Database:
-    def __init__(self):
-        logging.basicConfig(level=logging.DEBUG)
-        self.base_dir = config.db_file
+    def __init__(self, db_file):
         self.db = None
-        if not os.path.exists(self.base_dir):
+        self.db_file = db_file
+        if not os.path.exists(self.db_file):
             self.create_inital()
 
     def create_inital(self):
@@ -92,7 +93,7 @@ class Database:
         with open(path, "r") as sql_file:
             init_script = sql_file.read()
 
-        db = sqlite3.connect(self.base_dir)
+        db = sqlite3.connect(self.db_file)
         cursor = db.cursor()
         cursor.executescript(init_script)
         cursor.close()
@@ -106,12 +107,13 @@ class Database:
     def connect(self):
         if self.db is not None:
             self.close()
-        self.db = sqlite3.connect(self.base_dir)
+        self.db = sqlite3.connect(self.db_file)
         self.db.row_factory = self._dict_factory
 
     def close(self):
         if self.db is None:
             return
+        self.db.commit()
         self.db.close()
         self.db = None
 
@@ -136,15 +138,54 @@ class Database:
         except sqlite3.Error as e:
             logging.error(f"sqlite3 exception: {e}")
 
+    def insertmany(self, table: str, keys, values: list[tuple]):
+        if not self.ready():
+            raise Exception("database not ready")
+        if len(values) == 0:
+            return
+
+        placeholders = ",".join(["?"] * len(keys))
+        columns = ", ".join(keys)
+        sql = "INSERT OR IGNORE INTO %s ( %s ) VALUES ( %s )" % (
+            table,
+            columns,
+            placeholders,
+        )
+        try:
+            cursor = self.db.cursor()
+            cursor.executemany(sql, values)
+            self.db.commit()
+        except sqlite3.Error as e:
+            logging.error(f"sqlite3 exception: {e}")
+
+    # def upsert_answer(self, keys, values)
+    def upsert_answers(self, keys, values):
+        if not self.ready():
+            raise Exception("database not ready")
+
+        placeholders = ",".join(["?"] * len(keys))
+        columns = ", ".join(keys)
+        sql = (
+            "INSERT INTO answers ( %s ) VALUES ( %s ) ON CONFLICT(qid) DO UPDATE SET like_count=(?)"
+            % (
+                columns,
+                placeholders,
+            )
+        )
+        try:
+            cursor = self.db.cursor()
+            cursor.executemany(sql, values)
+            self.db.commit()
+        except sqlite3.Error as e:
+            logging.error(f"sqlite3 exception upsert_answers: {e}")
+
     def add_user(self, user: UserModel):
         table = "users"
         user["id"] = user["id"].lower()
         self.insert(table, user)
 
-    def add_answer(self, answer: AnswerModel):
-        table = "answers"
-        answer["uid"] = answer["uid"].lower()
-        self.insert(table, answer)
+    def add_answers(self, keys, values):
+        self.upsert_answers(keys, values)
 
     def add_chat(self, chat: ChatModel):
         table = "chats"
@@ -153,17 +194,13 @@ class Database:
         chat["uid"] = chat["uid"].lower()
         self.insert(table, chat)
 
-    def add_question(self, question: QuestionModel):
+    def add_questions(self, keys, values: list[tuple[QuestionModel]]):
         table = "questions"
-        question["uid"] = question["uid"].lower()
-        if question["author_id"] is not None:
-            question["author_id"] = question["author_id"].lower()
-        self.insert(table, question)
+        self.insertmany(table, keys, values)
 
-    def add_thread(self, thread: ThreadModel):
+    def add_threads(self, keys, values: list[tuple[ThreadModel]]):
         table = "threads"
-        thread["uid"] = thread["uid"].lower()
-        self.insert(table, thread)
+        self.insertmany(table, keys, values)
 
     def add_visual(self, visual: VisualModel):
         table = "visuals"
@@ -186,16 +223,17 @@ class Database:
     def _get_question_answer_view(self, uid) -> dict[int, QuestionAnswerView]:
         sql = """
 SELECT 
-    q.tid, 
-    a.qid, 
-    a.text as answer, 
-    a.visual_id as a_vid, 
-    a.created_at as a_ts, 
-    q.author_id, 
-    q.author_name, 
-    q.visual_id as q_vid , 
-    q.text as question, 
-    q.created_at as q_ts 
+    q.tid,
+    a.qid,
+    a.text as answer,
+    a.visual_id as a_vid,
+    a.created_at as a_ts,
+    a.like_count,
+    q.author_id,
+    q.author_name,
+    q.visual_id as q_vid,
+    q.text as question,
+    q.created_at as q_ts
 FROM 
     questions q, 
     answers a
@@ -277,12 +315,12 @@ ORDER BY
         records = self.fetch_all(sql, (uid.lower(),))
         return records[0]["count"]
 
-    def get_first_answer_time_stamp(self, uid: str) -> int:
+    def get_oldest_answer_time_stamp(self, uid: str) -> int:
         sql = "select MIN(created_at) as created_at from answers where uid = ?"
         records = self.fetch_all(sql, (uid.lower(),))
         return records[0]["created_at"]
 
-    def get_last_answer_time_stamp(self, uid: str) -> int:
+    def get_newest_answer_time_stamp(self, uid: str) -> int:
         sql = "select MAX(created_at) as created_at from answers where uid = ?"
         records = self.fetch_all(sql, (uid.lower(),))
         return records[0]["created_at"]
