@@ -29,6 +29,7 @@ CREATE TABLE `answers` (
     `text` text,
     `visual_id` varchar(255),
     `created_at` datetime not null,
+    `like_count` integer,
     foreign key(`uid`) references `users`(`id`),
     foreign key(`qid`) references `questions`(`qid`),
     foreign key(`visual_id`) references `visuals`(`id`)
