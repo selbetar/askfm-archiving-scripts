@@ -60,6 +60,7 @@ class ThreadModel(TypedDict):
 class UserModel(TypedDict):
     id: str
     name: str
+    blob: str
 
 
 class SchemaVersion(TypedDict):
@@ -158,7 +159,18 @@ class Database:
         except sqlite3.Error as e:
             logging.error(f"sqlite3 exception: {e}")
 
-    # def upsert_answer(self, keys, values)
+    def update_user_blob(self, id: str, blob: str):
+        if not self.ready():
+            raise Exception("database not ready")
+
+        sql = "UPDATE users SET blob=? WHERE id=?"
+        try:
+            cursor = self.db.cursor()
+            cursor.execute(sql, (blob, id))
+            self.db.commit()
+        except sqlite3.Error as e:
+            logging.error(f"sqlite3 exception update_user_blob: {e}")
+
     def upsert_answers(self, keys, values):
         if not self.ready():
             raise Exception("database not ready")

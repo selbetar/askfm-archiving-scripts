@@ -1,6 +1,7 @@
 CREATE TABLE `users` (
     `id` varchar(255) not null primary key,
-    `name` varchar(255)
+    `name` varchar(255),
+    `blob` text
 );
 
 CREATE TABLE `visuals` (
