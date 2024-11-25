@@ -14,7 +14,7 @@ from typing import Tuple
 import config
 from askfm_api import AskfmApi, AskfmApiError
 from askfm_api import requests as r
-from askfm_model import AskFM, askFMChat
+from askfm_model import AskFM, askFMChat, askFMProfileDetails
 from database import Database
 from processor import Processor
 
@@ -191,6 +191,31 @@ def extract_new_chats(username: str, limit: int = 700):
     logger.debug(f"number of new chats extracted: {len(chats)}")
 
 
+def extract_profile_info(username: str):
+    profile: askFMProfileDetails = api.request(r.fetch_profile(username))
+    # remove useless keys
+    uesless_keys = [
+        "avatarThumbUrl",
+        "backgroundThumbUrl",
+        "online",
+        "unregisteredAvailable",
+        "blocked",
+        "active",
+        "friend",
+        "allowAnonymousQuestion",
+        "allowAnswerSharing",
+        "allowSubscribing",
+        "showAds",
+        "verifiedAccount",
+        "emoodjiId",
+    ]
+    for key in uesless_keys:
+        if key in profile:
+            profile.pop(key)
+
+    processor.process_profile(profile)
+
+
 def run(usernames: list[str], force: bool, offset):
     try:
         api.log_in(config.username, config.password)
@@ -204,6 +229,7 @@ def run(usernames: list[str], force: bool, offset):
         username = username.lower()
         try:
             os.makedirs(os.path.join(OUTPUT_DIRECTORY, username), exist_ok=True)
+            extract_profile_info(username)
             if not force:
                 extract_new_chats(username=username, limit=100)
             extract_answers_and_chats(username, force, offset=offset)
@@ -218,6 +244,7 @@ def run(usernames: list[str], force: bool, offset):
             logger.error(f"error: {e}")
 
         print()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
