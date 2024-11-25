@@ -1,0 +1,1 @@
+py dump_db.py $args

@@ -155,13 +155,20 @@ class AskfmApi:
         *,
         unwrap: bool = True,
         offset: int = 0,
+        from_ts: int = None,
         limit: int = DEFAULT_LIMIT,
     ) -> Response:
         if not self.access_token and self.auto_refresh_session:
             self.refresh_session()
 
         if req.paginated:
-            params = {"offset": offset, "limit": limit, **req.params}
+            if from_ts is None:
+                params = {"offset": offset, "limit": limit, **req.params}
+            else:
+                params = {"limit": limit, **req.params}
+                params["from"] = (
+                    from_ts  # req.params could have `from` and end up overriding the iterator value
+                )
         else:
             params = req.params
 
@@ -192,20 +199,29 @@ class AskfmApi:
         req: Request,
         *,
         offset: int = 0,
+        from_ts: int = None,
         page_limit: int = DEFAULT_LIMIT,
     ) -> Iterator[Response]:
         if not req.paginated or not req.unwrap_key:
             raise TypeError("Cannot iterate non-paginated request")
 
         while True:
-            res = self.request(req, offset=offset, limit=page_limit, unwrap=False)
+            res = self.request(
+                req, from_ts=from_ts, offset=offset, limit=page_limit, unwrap=False
+            )
             items = res[req.unwrap_key]
             if not items:  # strangely, API always returns hasMore=True
                 break
+
             yield from items
-            if not res.get("incomplete", False) and not res["hasMore"]:
-                break
+            # if not res.get("incomplete", False) and not res["hasMore"]:
+            #     break
             offset += len(items)
+            prev_ts = from_ts
+            from_ts = items[-1].get("ts")
+
+            if prev_ts is not None and prev_ts == from_ts:
+                break
 
     def request_raw(
         self, method: str, path: str, params: Optional[ReqParams] = None

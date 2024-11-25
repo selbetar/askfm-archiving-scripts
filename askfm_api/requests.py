@@ -7,6 +7,7 @@ import askfm_api
 
 IdType = Union[str, int]
 
+
 # Note: typechecking this mess seems impossible.
 # See https://github.com/python/mypy/issues/3157#issue-221120895, section "Messing with the return type".
 def make_req(method, path, **req_kwargs):
@@ -144,9 +145,12 @@ def fetch_answers_2(username: str, *, skip: Optional[str] = None):
 
 @make_req("GET", "/users/profile/stream", paginated=True, unwrap_key="items")
 def fetch_profile_stream(
-    username: str, skip: Optional[str] = None, limit: Optional[int] = 50
+    username: str,
+    skip: Optional[str] = None,
+    limit: Optional[int] = 1000,
+    from_ts: Optional[int] = None,  # unix timestamp
 ):
-    return {"uid": username, "limit": limit, "skip": skip}
+    return {"uid": username, "limit": limit, "skip": skip, "from": from_ts}
 
 
 # === Report/block ===

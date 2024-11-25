@@ -1,6 +1,7 @@
 CREATE TABLE `users` (
     `id` varchar(255) not null primary key,
-    `name` varchar(255)
+    `name` varchar(255),
+    `blob` text
 );
 
 CREATE TABLE `visuals` (
@@ -29,6 +30,7 @@ CREATE TABLE `answers` (
     `text` text,
     `visual_id` varchar(255),
     `created_at` datetime not null,
+    `like_count` integer,
     foreign key(`uid`) references `users`(`id`),
     foreign key(`qid`) references `questions`(`qid`),
     foreign key(`visual_id`) references `visuals`(`id`)

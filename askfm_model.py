@@ -60,3 +60,21 @@ class askFMChat(TypedDict):
     messages: list[askFMChatMessages]
     hasOlder: bool
     owner: askFMChatOwner
+
+
+class askFMProfilePictures(TypedDict):
+    id: str
+    url: str
+
+
+class askFMProfileDetails(TypedDict):
+    fullName: str
+    uid: str
+    answerCount: int
+    likeCount: int
+    bio: str
+    location: str
+    webSite: str
+    avatarUrl: str
+    backgroundUrl: str
+    pictures: list[askFMProfilePictures]
