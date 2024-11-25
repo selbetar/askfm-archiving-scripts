@@ -19,7 +19,7 @@ from database import Database
 from processor import Processor
 
 OUTPUT_DIRECTORY = config.output_directory
-api = AskfmApi(base64.b64decode(config.key).decode("ascii"))
+
 logger = logging.getLogger(__name__)
 processor = Processor()
 
@@ -265,4 +265,13 @@ if __name__ == "__main__":
     logging.getLogger().addHandler(logging.FileHandler("extractor.log"))
     logging.getLogger().addHandler(logging.StreamHandler())
 
+    if len(config.username) == 0 or len(config.password) == 0:
+        print("askfm credentials are missing. Edit config.py with your credentials")
+        exit(-1)
+
+    if len(config.key) == 0:
+        print("API Key is missing from config.py. The key can be found in the README. ")
+        exit(-1)
+
+    api = AskfmApi(base64.b64decode(config.key).decode("ascii"))
     run(args.usernames)
