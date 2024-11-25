@@ -32,7 +32,7 @@ class DumpDatabase(Database):
     def __init__(self, uid):
         logging.basicConfig(level=logging.DEBUG)
         self.uid = uid.lower()
-        self.db_file = os.path.join(config.output_directory, f"askfm_view.db")
+        self.db_file = os.path.join(config.output_directory, f"{uid}.db")
         self.db = None
 
         if not os.path.exists(self.db_file):
@@ -103,7 +103,7 @@ class DumpDatabase(Database):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="askfm-dump", description="generates askfm_view database"
+        prog="askfm-Dump", description="generates askfm_view database"
     )
     parser.add_argument("usernames", nargs="+")
     args = parser.parse_args()
