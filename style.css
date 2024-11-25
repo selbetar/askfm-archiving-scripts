@@ -1,0 +1,63 @@
+.conversation {
+    margin: 20px;
+    direction: ltr; /* Default direction for the entire conversation */
+}
+
+.question-answer {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.question, .answer {
+    padding: 10px;
+}
+
+.question {
+    background-color: #f2f2f2;
+    border-bottom: 1px solid #ccc;
+}
+
+.answer {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    /* border-bottom: 1px solid #ccc; */
+}
+
+footer {
+    font-size: 0.8em;
+    color: #888;
+    text-align: left;
+    margin-top: 5px;
+}
+
+/* Handle RTL text direction */
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+.image-container {
+    width: 100%; /* Make the container take up 100% of its parent's width */
+    overflow: hidden; /* Hide any overflow content */
+  }
+  
+.image-container img {
+    width: 100%; /* Make the image take up 100% of the container's width */
+    height: auto; /* Maintain aspect ratio */
+  }
+
+@media print {
+    body {
+      font-size: 12pt;
+      /* margin: 1in; */
+    }
+  
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+}

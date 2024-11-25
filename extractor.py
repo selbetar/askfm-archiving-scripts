@@ -216,7 +216,7 @@ def extract_profile_info(username: str):
     processor.process_profile(profile)
 
 
-def run(usernames: list[str], force: bool, offset):
+def run(usernames: list[str], force: bool = False, offset=None):
     try:
         api.log_in(config.username, config.password)
     except AskfmApiError as e:
@@ -251,20 +251,7 @@ if __name__ == "__main__":
         prog="askfm-archiver", description="archive ask.fm profiles"
     )
     parser.add_argument("usernames", nargs="+")
-    parser.add_argument(
-        "-f",
-        "--force",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Specify this option if extraction was interrupted.",
-    )
-    parser.add_argument(
-        "-t",
-        "--timestamp",
-        default=None,
-        type=int,
-        help="Specify the timestamp from which parsing should start.",
-    )
+
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -278,4 +265,4 @@ if __name__ == "__main__":
     logging.getLogger().addHandler(logging.FileHandler("extractor.log"))
     logging.getLogger().addHandler(logging.StreamHandler())
 
-    run(args.usernames, args.force, args.timestamp)
+    run(args.usernames)
