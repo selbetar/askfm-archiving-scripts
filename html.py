@@ -23,7 +23,7 @@ class HTMLView:
         self.output_dir = os.path.join(OUTPUT_DIRECTORY, uid, "html")
         os.makedirs(self.output_dir, exist_ok=True)
 
-        self.visual_dir = os.path.join("..", OUTPUT_DIRECTORY, uid)
+        self.visual_dir = os.path.join("..")
 
     def generate(self, user: str):
         user = user.lower()
@@ -72,7 +72,7 @@ class HTMLView:
         if len(body) > 0:
             body = self.body(body)
             file = os.path.join(self.output_dir, f"{self.uid}_{count}.html")
-            with open(file, mode="w") as f:
+            with open(file, mode="w", encoding="utf-8") as f:
                 f.write(f"{body}")
 
         print(
@@ -209,7 +209,7 @@ class HTMLView:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question-Answer Conversation</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../../style.css">
 </head>
 <body>
 {body}
