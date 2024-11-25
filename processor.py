@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from typing import Tuple
@@ -14,6 +15,8 @@ from askfm_model import (
     askFMChat,
     askFMChatMessages,
     askFMChatOwner,
+    askFMProfileDetails,
+    askFMProfilePictures,
 )
 from database import (
     AnswerModel,
@@ -39,17 +42,6 @@ class Processor:
         self.logger.debug("processing started")
         if len(data) == 0:
             return
-
-        for entry in data:
-            if entry["type"] != "question":
-                continue
-            answer: AskFMData = entry["data"]["answer"]
-            user = UserModel(id=answer["author"], name=answer["authorName"])
-            try:
-                self.db.add_user(user)
-            except Exception as e:
-                self.logger.warning(f"failed to create user entry in the database: {e}")
-            break
 
         i = 0
         questions = []
@@ -93,6 +85,42 @@ class Processor:
         self.db.add_threads(t_keys, threads)
 
         self.logger.debug("processing finished")
+        self.db.close()
+
+    def process_profile(self, data: askFMProfileDetails):
+        urls = {}
+        if data.get("avatarUrl") is not None and len(data["avatarUrl"]) > 0:
+            url = data["avatarUrl"]
+            filename = url.split("/")[-1]
+            filename = filename[: filename.index(".")]
+            filename = f"profile_{filename}"
+            urls[filename] = url
+
+        if data.get("backgroundUrl") is not None and len(data["backgroundUrl"]) > 0:
+            url = data["backgroundUrl"]
+            filename = url.split("/")[-1]
+            filename = filename[: filename.index(".")]
+            filename = f"background_{filename}"
+            urls[filename] = url
+
+        for picture in data["pictures"]:
+            url = picture["url"]
+            filename = url.split("/")[-1]
+            filename = filename[: filename.index(".")]
+            filename = f"profile_{filename}"
+            urls[filename] = url
+
+        uid = data["uid"].lower()
+        for filename, url in urls.items():
+            path = os.path.join(self.download_dir, uid, filename)
+            visual_id, ok = self.download_image(url=url, path=path)
+
+        blob = json.dumps(data)
+        user = UserModel(id=uid, name=data["fullName"], blob=blob)
+
+        self.db.connect()
+        self.db.add_user(user)
+        self.db.update_user_blob(id=uid, blob=blob)
         self.db.close()
 
     def _process_question(self, data: AskFMData) -> QuestionModel:
@@ -181,7 +209,7 @@ class Processor:
             self.db.add_download_queue(
                 visual=QueueModel(
                     id=visual_id,
-                    url=data["answer"]["photoUrl"],
+                    url=visual_url,
                     directory=relative,
                     type=data["answer"]["type"],
                 )
@@ -235,9 +263,9 @@ class Processor:
 
         filename = os.path.basename(path)
         tokens = url.split(".")
-        ext = tokens[len(tokens) - 1]
-        if "&" in ext:
-            ext = ext[: ext.index("&")]
+        ext = tokens[-1]
+        if ".gif" in ext:
+            ext = ext[: ext.index(".gif") + 4]
 
         # file already exists, we may have downloaded it before using the old
         # extractor, so skip and return true
