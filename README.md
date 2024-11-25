@@ -25,7 +25,7 @@ This will initialize the virtual environment and will install the required depen
 1. Download [Python3.11](https://www.python.org/downloads/release/python-3119/)
     - You can find the installer at the bottom of the page
     - Make sure to select `Add python to PATH`
-2. Download the [Source code (zip)](https://github.com/selbetar/askfm-archiving-scripts/releases/latest) from the latest release
+2. Download the [Source code (zip)](https://github.com/selbetar/askfm-archiving-scripts/releases/latest) of the latest release
 3. Unzip the downloaded file
 4. Open `Powershell` and cd into the directory and execute `setup.ps1`
 
